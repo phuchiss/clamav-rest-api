@@ -1,0 +1,31 @@
+name: Docker Image CI
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Get the version
+      id: get-version
+      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      
+    - name: Login reg.bcecm.com
+      id: login-docker
+      run: docker login -u 'robot$action5' -p ${{ secrets.RegToken }} reg.bcecm.com/tns
+      
+    - name: Build
+      id: build-docker
+      run: docker build --no-cache -f ./Dockerfile -t reg.bcecm.com/tns/clamav-rest-api:${{ steps.get-version.outputs.VERSION }} -t reg.bcecm.com/tns/clamav-rest-api:latest .
+      
+    - name: Push
+      id: push-docker
+      run: docker push --all-tags reg.bcecm.com/tns/clamav-rest-api
